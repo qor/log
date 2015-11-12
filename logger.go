@@ -41,16 +41,23 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 		method := c.Request.Method
 		statusCode := c.Writer.Status()
 		statusColor := colorForStatus(statusCode)
+		formValues := c.Request.URL.Query()
+		if formValues == nil {
+			formValues = make(map[string][]string)
+		}
+		for k, v := range c.Request.Form {
+			formValues[k] = v
+		}
 
-		if len(c.Request.Form) > 0 {
-			fmt.Fprintf(out, "[GIN] %v |%s %3d %s| %11v | %s |%-7s %s\n      Form: %v \n",
+		if len(formValues) > 0 {
+			fmt.Fprintf(out, "[GIN] %v |%s %3d %s| %11v | %s |%-7s %s\n      Params: %v \n",
 				end.Format("2006/01/02 15:04:05"),
 				statusColor, statusCode, reset,
 				latency,
 				clientIP,
 				method,
 				path,
-				c.Request.Form,
+				formValues,
 			)
 		} else {
 			fmt.Fprintf(out, "[GIN] %v |%s %3d %s| %11v | %s |%-7s %s\n",
