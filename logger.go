@@ -3,32 +3,43 @@ package log
 import (
 	"fmt"
 	"io"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
-var (
-	green  = string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
-	white  = string([]byte{27, 91, 57, 48, 59, 52, 55, 109})
-	yellow = string([]byte{27, 91, 57, 55, 59, 52, 51, 109})
-	red    = string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
-	reset  = string([]byte{27, 91, 48, 109})
-)
+var fileLogWriter *FileLogWriter
 
 // Instances a Logger middleware that will write the logs to gin.DefaultWriter
 // By default gin.DefaultWriter = os.Stdout
-func Logger() gin.HandlerFunc {
-	return LoggerWithWriter(gin.DefaultWriter)
+func Logger(fileName string, maxdays int) gin.HandlerFunc {
+	if fileName == "" {
+		return LoggerWithWriter(gin.DefaultWriter)
+	}
+	fw := new(FileLogWriter)
+	fw.FileName = fileName
+	fw.MaxDays = maxdays
+
+	_, err := fw.createLogFile()
+	if err != nil {
+		panic(err)
+	}
+	return LoggerWithWriter(fw.fd)
 }
 
 // Instance a Logger middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		path := c.Request.URL.Path
+
+		if strings.HasPrefix(path, "/system/") || strings.HasPrefix(path, "/assets/") {
+			c.Next()
+			return
+		}
 		// Start timer
 		start := time.Now()
-		path := c.Request.URL.Path
 
 		// Process request
 		c.Next()
@@ -40,7 +51,6 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 		clientIP := c.ClientIP()
 		method := c.Request.Method
 		statusCode := c.Writer.Status()
-		statusColor := colorForStatus(statusCode)
 		formValues := c.Request.URL.Query()
 		if formValues == nil {
 			formValues = make(map[string][]string)
@@ -50,9 +60,9 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 		}
 
 		if len(formValues) > 0 {
-			fmt.Fprintf(out, "[GIN] %v |%s %3d %s| %11v | %s |%-7s %s\n      Params: %v \n",
+			fmt.Fprintf(out, "[GIN] %v | %3d | %11v | %s |%-7s %s\n      Params: %v \n",
 				end.Format("2006/01/02 15:04:05"),
-				statusColor, statusCode, reset,
+				statusCode,
 				latency,
 				clientIP,
 				method,
@@ -60,28 +70,14 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 				formValues,
 			)
 		} else {
-			fmt.Fprintf(out, "[GIN] %v |%s %3d %s| %11v | %s |%-7s %s\n",
+			fmt.Fprintf(out, "[GIN] %v | %3d | %11v | %s |%-7s %s\n",
 				end.Format("2006/01/02 15:04:05"),
-				statusColor, statusCode, reset,
+				statusCode,
 				latency,
 				clientIP,
 				method,
 				path,
 			)
 		}
-
-	}
-}
-
-func colorForStatus(code int) string {
-	switch {
-	case code >= 200 && code < 300:
-		return green
-	case code >= 300 && code < 400:
-		return white
-	case code >= 400 && code < 500:
-		return yellow
-	default:
-		return red
 	}
 }
