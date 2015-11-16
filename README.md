@@ -1,7 +1,5 @@
 # Usage
 
-## Config
-
 database.staging.yml 
 ```
 port: 8000
@@ -12,6 +10,8 @@ log:
 
 config.go
 ```
+import "github.com/jinzhu/configor"
+
 var Config = struct {
     Env  string `env:"ENV" default:"local"`
     Port uint   `env:"PORT" default:"7000"`
@@ -32,5 +32,5 @@ func init() {
 import "github.com/qor/log"
 
 router := gin.New()
-router.Use(log.Logger(config.Config.Log.FileName,config.Config.Log.Maxdays))
+router.Use(log.Logger(Config.Log.FileName,Config.Log.Maxdays))
 ```
