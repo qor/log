@@ -32,17 +32,18 @@ func Logger(fileName string, maxdays int) gin.HandlerFunc {
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		path := c.Request.URL.Path
-
-		if strings.HasPrefix(path, "/system/") || strings.HasPrefix(path, "/assets/") {
-			c.Next()
-			return
-		}
 		// Start timer
 		start := time.Now()
 
 		// Process request
 		c.Next()
+
+		// Don't log normal assets
+		path := c.Request.URL.Path
+		statusCode := c.Writer.Status()
+		if (strings.HasPrefix(path, "/system/") || strings.HasPrefix(path, "/assets/")) && statusCode < 400 {
+			return
+		}
 
 		// Stop timer
 		end := time.Now()
@@ -50,7 +51,6 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 
 		clientIP := c.ClientIP()
 		method := c.Request.Method
-		statusCode := c.Writer.Status()
 		formValues := c.Request.URL.Query()
 		if formValues == nil {
 			formValues = make(map[string][]string)

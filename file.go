@@ -30,12 +30,11 @@ func (fw *FileLogWriter) createLogFile() (*os.File, error) {
 func (fw *FileLogWriter) Write(b []byte) (int, error) {
 	fw.Lock()
 	defer fw.Unlock()
+	fw.check()
 	return fw.fd.Write(b)
 }
 
 func (fw *FileLogWriter) check() {
-	fw.Lock()
-	defer fw.Unlock()
 	if time.Now().Day() != fw.opendate {
 		if err := fw.rotate(); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", fw.FileName, err)
