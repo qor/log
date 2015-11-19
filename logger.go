@@ -9,8 +9,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var fileLogWriter *FileLogWriter
-
 // Instances a Logger middleware that will write the logs to gin.DefaultWriter
 // By default gin.DefaultWriter = os.Stdout
 func Logger(fileName string, maxdays int) gin.HandlerFunc {
@@ -25,7 +23,7 @@ func Logger(fileName string, maxdays int) gin.HandlerFunc {
 	if err != nil {
 		panic(err)
 	}
-	return LoggerWithWriter(fw.fd)
+	return LoggerWithWriter(fw)
 }
 
 // Instance a Logger middleware with the specified writter buffer.
