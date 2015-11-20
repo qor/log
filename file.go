@@ -48,13 +48,7 @@ func (fw *FileLogWriter) check() {
 func (fw *FileLogWriter) rotate() error {
 	_, err := os.Lstat(fw.FileName)
 	if err == nil { // file exists
-		// Find the next available number
-		fname := fw.FileName + fmt.Sprintf(".%s.%03d", time.Now().AddDate(0, 0, -1).Format("2006-01-02"))
-		_, err = os.Lstat(fname)
-		// return error if the last file checked still existed
-		if err == nil {
-			return fmt.Errorf("Rotate: Cannot find free log number to rename %s\n", fw.FileName)
-		}
+		fname := fw.FileName + fmt.Sprintf(".%s", time.Now().AddDate(0, 0, -1).Format("2006-01-02"))
 
 		// close file before rename
 		fw.fd.Close()
