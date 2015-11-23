@@ -12,7 +12,8 @@ import (
 type FileLogWriter struct {
 	sync.Mutex
 	fd       *os.File
-	opendate int
+	opendate time.Time
+	openday  int
 	FileName string
 	MaxDays  int
 }
@@ -22,7 +23,8 @@ func (fw *FileLogWriter) createLogFile() (*os.File, error) {
 	var err error
 	fw.fd, err = os.OpenFile(fw.FileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
 	if err == nil {
-		fw.opendate = time.Now().Day()
+		fw.opendate = time.Now()
+		fw.openday = fw.opendate.Day()
 	}
 	return fw.fd, err
 }
@@ -35,7 +37,7 @@ func (fw *FileLogWriter) Write(b []byte) (int, error) {
 }
 
 func (fw *FileLogWriter) check() {
-	if time.Now().Day() != fw.opendate {
+	if time.Now().Day() != fw.openday {
 		if err := fw.rotate(); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", fw.FileName, err)
 			return
@@ -48,7 +50,7 @@ func (fw *FileLogWriter) check() {
 func (fw *FileLogWriter) rotate() error {
 	_, err := os.Lstat(fw.FileName)
 	if err == nil { // file exists
-		fname := fw.FileName + fmt.Sprintf(".%s", time.Now().AddDate(0, 0, -1).Format("2006-01-02"))
+		fname := fw.FileName + fmt.Sprintf(".%s", fw.opendate.Format("2006-01-02"))
 
 		// close file before rename
 		fw.fd.Close()
