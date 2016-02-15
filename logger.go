@@ -3,7 +3,6 @@ package log
 import (
 	"fmt"
 	"io"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -32,16 +31,15 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
+		path := c.Request.URL.Path
 
 		// Process request
 		c.Next()
 
-		// Don't log normal assets
-		path := c.Request.URL.Path
 		statusCode := c.Writer.Status()
-		if (strings.HasPrefix(path, "/system/") || strings.HasPrefix(path, "/assets/")) && statusCode < 400 {
-			return
-		}
+		// if (strings.HasPrefix(path, "/system/") || strings.HasPrefix(path, "/assets/")) && statusCode < 400 {
+		// 	return
+		// }
 
 		// Stop timer
 		end := time.Now()
