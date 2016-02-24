@@ -8,13 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// Instances a Logger middleware that will write the logs to gin.DefaultWriter
+// Logger is a middleware that will write the logs to gin.DefaultWriter
 // By default gin.DefaultWriter = os.Stdout
 func Logger(fileName string, maxdays int) gin.HandlerFunc {
 	if fileName == "" {
 		return LoggerWithWriter(gin.DefaultWriter)
 	}
-	fw := new(FileLogWriter)
+	fw := new(fileLogWriter)
 	fw.FileName = fileName
 	fw.MaxDays = maxdays
 
@@ -25,7 +25,7 @@ func Logger(fileName string, maxdays int) gin.HandlerFunc {
 	return LoggerWithWriter(fw)
 }
 
-// Instance a Logger middleware with the specified writter buffer.
+// LoggerWithWriter is a middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 	return func(c *gin.Context) {

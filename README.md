@@ -1,36 +1,20 @@
-# Usage
+# Logger
 
-database.staging.yml 
-```
-port: 8000
-log:
-  filename: charity
-  maxdays: 30
-```
+A logger middleware for Gin
 
-config.go
-```
-import "github.com/jinzhu/configor"
+[![GoDoc](https://godoc.org/github.com/qor/log?status.svg)](https://godoc.org/github.com/qor/log)
 
-var Config = struct {
-    Env  string `env:"ENV" default:"local"`
-    Port uint   `env:"PORT" default:"7000"`
-    Log struct {
-        FileName string
-        Maxdays  int `default:"30"`
-    }
-}{}
+## Usage
 
-func init() {
-    if err := configor.Load(&Config, "config/database.yml"); err != nil {
-        panic(err)
-    }
+```go
+import "github.com/qor/log"
+
+func main() {
+  router := gin.New()
+  router.Use(log.Logger("application.log", 30)) // save logs into application.log, max days is 30
 }
 ```
 
-```
-import "github.com/qor/log"
+## License
 
-router := gin.New()
-router.Use(log.Logger(Config.Log.FileName,Config.Log.Maxdays))
-```
+Released under the [MIT License](http://opensource.org/licenses/MIT).

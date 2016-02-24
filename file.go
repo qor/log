@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type FileLogWriter struct {
+type fileLogWriter struct {
 	sync.Mutex
 	fd       *os.File
 	opendate time.Time
@@ -18,7 +18,7 @@ type FileLogWriter struct {
 	MaxDays  int
 }
 
-func (fw *FileLogWriter) createLogFile() (*os.File, error) {
+func (fw *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
 	var err error
 	fw.fd, err = os.OpenFile(fw.FileName, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
@@ -29,14 +29,14 @@ func (fw *FileLogWriter) createLogFile() (*os.File, error) {
 	return fw.fd, err
 }
 
-func (fw *FileLogWriter) Write(b []byte) (int, error) {
+func (fw *fileLogWriter) Write(b []byte) (int, error) {
 	fw.Lock()
 	defer fw.Unlock()
 	fw.check()
 	return fw.fd.Write(b)
 }
 
-func (fw *FileLogWriter) check() {
+func (fw *fileLogWriter) check() {
 	if time.Now().Day() != fw.openday {
 		if err := fw.rotate(); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", fw.FileName, err)
@@ -47,7 +47,7 @@ func (fw *FileLogWriter) check() {
 
 // write log in new file.
 // new file name like xx.log.2013-01-01.2
-func (fw *FileLogWriter) rotate() error {
+func (fw *fileLogWriter) rotate() error {
 	_, err := os.Lstat(fw.FileName)
 	if err == nil { // file exists
 		fname := fw.FileName + fmt.Sprintf(".%s", fw.opendate.Format("2006-01-02"))
@@ -71,7 +71,7 @@ func (fw *FileLogWriter) rotate() error {
 
 	return nil
 }
-func (fw *FileLogWriter) deleteOldLog() (err error) {
+func (fw *fileLogWriter) deleteOldLog() (err error) {
 	if fw.MaxDays <= 0 {
 		return
 	}
