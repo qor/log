@@ -56,6 +56,11 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 		}
 
 		if len(formValues) > 0 {
+			for k, _ := range formValues {
+				if k == "password" {
+					formValues[k] = []string{"***"}
+				}
+			}
 			fmt.Fprintf(out, "[GIN] %v | %3d | %11v | %s |%-7s %s\n      Params: %v \n",
 				end.Format("2006/01/02 15:04:05"),
 				statusCode,
