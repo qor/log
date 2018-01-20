@@ -57,7 +57,7 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 
 		if len(formValues) > 0 {
 			for k, _ := range formValues {
-				if k == "password" {
+				if k == "password"  || k == "client_secret" {
 					formValues[k] = []string{"***"}
 				}
 			}
