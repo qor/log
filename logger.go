@@ -10,9 +10,9 @@ import (
 
 // Logger is a middleware that will write the logs to gin.DefaultWriter
 // By default gin.DefaultWriter = os.Stdout
-func Logger(fileName string, maxdays int) gin.HandlerFunc {
+func Logger(fileName string, maxdays int, hideValues []string) gin.HandlerFunc {
 	if fileName == "" {
-		return LoggerWithWriter(gin.DefaultWriter)
+		return LoggerWithWriter(gin.DefaultWriter, hideValues)
 	}
 	fw := new(fileLogWriter)
 	fw.FileName = fileName
@@ -22,12 +22,12 @@ func Logger(fileName string, maxdays int) gin.HandlerFunc {
 	if err != nil {
 		panic(err)
 	}
-	return LoggerWithWriter(fw)
+	return LoggerWithWriter(fw, hideValues)
 }
 
 // LoggerWithWriter is a middleware with the specified writter buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
-func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
+func LoggerWithWriter(out io.Writer, hideValues []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
@@ -57,8 +57,10 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 
 		if len(formValues) > 0 {
 			for k, _ := range formValues {
-				if k == "password"  || k == "client_secret" {
-					formValues[k] = []string{"***"}
+				for _, a := range hideValues {
+					if k == a || k == "password" {
+						formValues[k] = []string{"***"}
+					}
 				}
 			}
 			fmt.Fprintf(out, "[GIN] %v | %3d | %11v | %s |%-7s %s\n      Params: %v \n",
