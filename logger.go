@@ -56,10 +56,10 @@ func LoggerWithWriter(out io.Writer, hideValues []string) gin.HandlerFunc {
 		}
 
 		if len(formValues) > 0 {
-			for k, _ := range formValues {
-				for _, a := range hideValues {
-					if k == a || k == "password" {
-						formValues[k] = []string{"***"}
+			for formValue, _ := range formValues {
+				for _, hideValue := range hideValues {
+					if formValue == hideValue || formValue == "password" {
+						formValues[formValue] = []string{"***"}
 					}
 				}
 			}
