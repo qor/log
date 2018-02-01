@@ -25,9 +25,20 @@ func Logger(fileName string, maxdays int) gin.HandlerFunc {
 	return LoggerWithWriter(fw)
 }
 
-// LoggerWithWriter is a middleware with the specified writter buffer.
+// LoggerWithHide is a middleware that will hide the values of the given headers when logging
+// Must specify all headers, password is not default here
+// Default writer is used
+func LoggerWithHide(hideValues []string) gin.HandlerFunc {
+	return loggerCommon(gin.DefaultWriter, hideValues)
+}
+
+// LoggerWithWriter is a middleware with the specified writer buffer.
 // Example: os.Stdout, a file opened in write mode, a socket...
 func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
+	return loggerCommon(out, []string{"password"})
+}
+
+func loggerCommon(out io.Writer, hideValues []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Start timer
 		start := time.Now()
@@ -56,9 +67,11 @@ func LoggerWithWriter(out io.Writer) gin.HandlerFunc {
 		}
 
 		if len(formValues) > 0 {
-			for k, _ := range formValues {
-				if k == "password" {
-					formValues[k] = []string{"***"}
+			for formValue, _ := range formValues {
+				for _, hideValue := range hideValues {
+					if formValue == hideValue {
+						formValues[formValue] = []string{"***"}
+					}
 				}
 			}
 			fmt.Fprintf(out, "[GIN] %v | %3d | %11v | %s |%-7s %s\n      Params: %v \n",
